@@ -10,29 +10,31 @@ export class SuggestionsService {
   public async getSuggestions(start: string): Promise<NodeResponseDto[]> {
     const nodes = this.graphService.getNodes({ start });
 
-    const filteredNodes = nodes.filter((node) => {
-      if (node.channelCount < MIN_CHANNELS || node.channelCount > MAX_CHANNELS) {
-        return false;
-      }
+    const filteredNodes = nodes
+      .filter((node) => {
+        // if (node.channelCount < MIN_CHANNELS || node.channelCount > MAX_CHANNELS) {
+        //   return false;
+        // }
 
-      if (node.distance < MIN_DISTANCE) {
-        return false;
-      }
+        // if (node.distance < MIN_DISTANCE) {
+        //   return false;
+        // }
 
-      const lastUpdateInLessThatTwoWeeks =
-        process.env.NODE_ENV !== 'production' ? true : Date.now() - node.lastUpdate <= TWO_WEEKS;
+        const lastUpdateInLessThatTwoWeeks = Date.now() - node.lastUpdate <= TWO_WEEKS;
 
-      if (!lastUpdateInLessThatTwoWeeks) {
-        return false;
-      }
+        if (!lastUpdateInLessThatTwoWeeks) {
+          return false;
+        }
 
-      if (node.avgChannelSize < MIN_AVG_CHANNEL_SIZE) {
-        return false;
-      }
+        // if (node.avgChannelSize < MIN_AVG_CHANNEL_SIZE) {
+        //   return false;
+        // }
 
-      return true;
-    });
+        return true;
+      })
+      .slice(0, 100);
 
+    console.log('filteredNodes', filteredNodes.length);
     const edges = await this.graphService.getEdges(filteredNodes);
 
     const interConnectedNodes = new Map<string, number>();

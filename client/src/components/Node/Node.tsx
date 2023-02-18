@@ -1,11 +1,23 @@
+import React from "react";
 import { NodeResponseDto } from "../../generated";
+import { Channel, Peer } from "../../pages/HomePage/HomePage";
 import { useAppDispatch } from "../../redux/hooks";
 import Info from "../Info/Info";
 import { connectionsMouseEntered, resetTooltip } from "../Ninja/tooltip-slice";
 import "./node.css";
 import Socket from "./Socket";
 
-const Node = ({ node }: { node: NodeResponseDto }) => {
+const Node = ({
+  node,
+  peers,
+  channels,
+  refetchPeers,
+}: {
+  node: NodeResponseDto;
+  peers: Peer[];
+  channels: Channel[];
+  refetchPeers: () => void;
+}) => {
   const dispatch = useAppDispatch();
 
   const handleConnectionsMouseEnter = () => {
@@ -114,7 +126,15 @@ const Node = ({ node }: { node: NodeResponseDto }) => {
         <ul className="node__sockets-list">
           {node.sockets.map((socket, i) => (
             <li key={i} className="node__sockets-list-item">
-              <Socket socket={socket} pubkey={node.id} />
+              <Socket
+                socket={socket}
+                pubkey={node.id}
+                isPaired={peers.some((pair) => pair.pub_key === node.id)}
+                hasChannel={channels.some(
+                  (channel) => channel.remote_pubkey === node.id
+                )}
+                refetchPeers={refetchPeers}
+              />
             </li>
           ))}
         </ul>

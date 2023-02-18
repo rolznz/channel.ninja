@@ -1,3 +1,4 @@
+import React from "react";
 import { useCallback, useEffect, useRef } from "react";
 import Form from "../../components/Form";
 import ListItem from "../../components/ListItem";
@@ -27,12 +28,48 @@ export enum TooltipState {
   NINJA_CLICKED = "NINJA_CLICKED",
 }
 
+export type Peer = {
+  pub_key: string;
+};
+export type Channel = {
+  remote_pubkey: string;
+};
+
 const HomePage = () => {
   const socket = useSockets();
   const state = useAppSelector((state) => state.global);
   const dispatch = useAppDispatch();
   const intervalRef = useRef<NodeJS.Timer>();
   const setTooltip = useTimeoutTooltip();
+  const [peers, setPeers] = React.useState<Peer[]>([]);
+  const refetchPeers = React.useCallback(async () => {
+    if (window.webln) {
+      await window.webln.enable();
+      setPeers(
+        ((await window.webln.request("listpeers")) as { peers: Peer[] }).peers
+      );
+    }
+  }, []);
+  const [channels, setChannels] = React.useState<Channel[]>([]);
+  const refetchChannels = React.useCallback(async () => {
+    if (window.webln) {
+      await window.webln.enable();
+      setChannels(
+        (
+          (await window.webln.request("listchannels")) as {
+            channels: Channel[];
+          }
+        ).channels
+      );
+    }
+  }, []);
+
+  React.useEffect(() => {
+    (async () => {
+      await refetchPeers();
+      await refetchChannels();
+    })();
+  }, [refetchPeers, refetchChannels]);
 
   useEffect(() => {
     socket?.on("lnd:invoice-confirmed", (id) => {
@@ -149,9 +186,14 @@ const HomePage = () => {
         </div>
 
         <div className="home__content-inner">
-          {state.nodeInfo && !state.invoicePaid && state.pubKey && (
+          {state.nodeInfo /*&& !state.invoicePaid*/ && state.pubKey && (
             <div className="home__node-info">
-              <NodeInfo nodeInfo={state.nodeInfo} pubKey={state.pubKey} />
+              <NodeInfo
+                nodeInfo={state.nodeInfo}
+                pubKey={state.pubKey}
+                peers={peers}
+                channels={channels}
+              />
             </div>
           )}
 
@@ -159,7 +201,12 @@ const HomePage = () => {
             <ul style={{ width: "100%" }}>
               {state.nodes.map((node) => (
                 <ListItem key={node.id}>
-                  <Node node={node} />
+                  <Node
+                    node={node}
+                    peers={peers}
+                    refetchPeers={refetchPeers}
+                    channels={channels}
+                  />
                 </ListItem>
               ))}
             </ul>

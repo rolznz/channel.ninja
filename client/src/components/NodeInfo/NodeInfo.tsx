@@ -1,12 +1,17 @@
 import { NodeInfoDto } from "../../generated";
+import { Channel, Peer } from "../../pages/HomePage/HomePage";
 import "./node-info.css";
 
 const NodeInfo = ({
   nodeInfo,
   pubKey,
+  peers,
+  channels,
 }: {
   nodeInfo: NodeInfoDto;
   pubKey: string;
+  peers: Peer[];
+  channels: Channel[];
 }) => {
   return (
     <div className="node-info">
@@ -63,6 +68,35 @@ const NodeInfo = ({
               </dd>
             ))}
           </div>
+        </div>
+
+        <div className="node-info__dl-wrap">
+          <dt className="node-info__definition-term">peers</dt>
+          {peers.length > 0 ? (
+            <div>
+              {peers.map((peer, index) => (
+                <dd key={index} className="node-info__definition-data">
+                  {peer.pub_key}
+                </dd>
+              ))}
+            </div>
+          ) : (
+            "no pairs connected"
+          )}
+        </div>
+        <div className="node-info__dl-wrap">
+          <dt className="node-info__definition-term">channels</dt>
+          {channels.length > 0 ? (
+            <div>
+              {channels.map((channel, index) => (
+                <dd key={index} className="node-info__definition-data">
+                  {channel.remote_pubkey}
+                </dd>
+              ))}
+            </div>
+          ) : (
+            "no channels connected"
+          )}
         </div>
       </dl>
     </div>
